@@ -27,11 +27,13 @@ import signal
 import base64
 import shutil
 import subprocess
+import traceback
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from io import BytesIO
 from tempfile import NamedTemporaryFile
 from typing import TypeAlias
+import logging
 
 from PIL import Image
 from pexpect import EOF
@@ -40,6 +42,7 @@ from pexpect.popen_spawn import PopenSpawn
 from .common import PathEx, DEFAULT_EBLOOK, DEFAULT_ESTCMD, DEFAULT_MAX_HITS
 
 EBLOOK_MENU = list[tuple[int, str, str]]
+LOGGER = logging.getLogger(__name__)
 
 GLOBAL_ALTERNATE_INI = None
 
@@ -735,7 +738,12 @@ class EBhtml:
                                 result.append(
                                     f'<img src="{img_data}" alt="{alt}" />')
                     else:
-                        raise Exception(f"unknown tag {tag}")
+                        # Include the current frame and the two callers
+                        # above it, not the whole stack.
+                        stack = "".join(traceback.format_stack(limit=3))
+                        LOGGER.warning(
+                            "unknown tag %s, skip it.\n%s", tag,
+                            stack.rstrip())
                 else:
                     m = self.TEXT_RE.match(line)
                     if m:

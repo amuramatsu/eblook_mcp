@@ -23,6 +23,7 @@
 """Unit tests for eblook_mcp.eblook (no real dictionary required)."""
 
 import base64
+import logging
 import re
 import subprocess
 from io import BytesIO
@@ -292,9 +293,15 @@ class TestEb2Html:
     def test_lone_less_than_does_not_loop(self) -> None:
         assert make_html()._eb2html("<") == "<"
 
-    def test_unknown_tag_raises(self) -> None:
-        with pytest.raises(Exception, match="unknown tag"):
-            make_html()._eb2html("<unknown>x")
+    def test_unknown_tag_is_logged_and_skipped(
+            self, caplog: pytest.LogCaptureFixture) -> None:
+        with caplog.at_level(logging.WARNING, logger="eblook_mcp"):
+            assert make_html()._eb2html("<unknown>x") == "x"
+        text = caplog.text
+        assert "unknown tag unknown" in text
+        # the current frame plus two callers, not the entire stack
+        assert text.count('  File "') == 3
+        assert "_eb2html" in text
 
     def test_gaiji_from_mapfile(self) -> None:
         html = make_html(gaiji_map={"za233": "あ"})
