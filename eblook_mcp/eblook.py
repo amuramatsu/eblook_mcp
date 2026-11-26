@@ -300,7 +300,7 @@ class EBlook:
     MENU_RE = re.compile(r'^\s*(\d+).\s*([^\s]+)\s+(.*)$')
     def _parse_menu(self, s: str) -> EBLOOK_MENU:
         result = []
-        for line in s.split("\n"):
+        for line in s.splitlines():
             m = self.MENU_RE.match(line)
             if m:
                 result.append((int(m.group(1)), m.group(2), m.group(3)))
